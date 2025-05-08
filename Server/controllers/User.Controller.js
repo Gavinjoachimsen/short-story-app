@@ -1,32 +1,37 @@
 const User = require('../models/userModel.js')
+const { ValidationError, UniqueConstraintError } = require("sequelize");
 const bcrypt = require("bcryptjs")
 
-const registerUser = async (req, res)=>{
-    try{
-        const {username, name, password , confirmPassword, email } = req.body
-        if(password !== confirmPassword){
-            return res.status(400).json({error: "Passwords do not match!"})
+const registerUser = async (req, res) => {
+    try {
+        const { username, name, email, password, confirmPassword } = req.body;
+
+        const user = User.build({
+            username,
+            name,
+            email,
+            password 
+        });
+        await user.validate(); 
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+
+        await user.save();
+
+        return res.status(201).json(user);
+
+    } catch (error) {
+        console.log(error)
+        if (error instanceof ValidationError || error instanceof UniqueConstraintError) {
+            const messages = error.errors.map(e => e.message);
+            return res.status(400).json({ errors: messages });
         }
 
-        if (password.length < 8 || password.length > 50) {
-            return res.status(400).json({error: "Password has to be between 8-50 characters long!"})
-          }
-
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword = await bcrypt.hash(password, salt)
-
-        const USER = await User.create({
-            username,
-            password : hashedPassword,
-            name, 
-            email
-        })
-        res.status(201).json(USER)
-    }catch(error){
-        res.status(400).json(error)
+        console.error(error);
+        return res.status(500).json({ errors: ["Something went wrong."] });
     }
-}
-
+};
 
 const getAllUsers = async (req, res) =>{
     try{

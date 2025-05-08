@@ -20,8 +20,9 @@ const Story = sequelize.define("Story", {
     story: {type: DataTypes.TEXT('long'), allowNull: false, 
         validate:{ 
             notEmpty:{ msg: "Story must not be empty"}, 
-            len: {args: [100,7000 ], msg:"Has to be at least 100-7000 characters long."} }}, 
-    published: {type:DataTypes.DATE, defaultValue: DataTypes.NOW}
+            len: {args: [100,7000 ], msg:" Story Has to be at least 100-7000 characters long."} }}, 
+    published: {type:DataTypes.DATE, defaultValue: DataTypes.NOW},
+
 })
 
 Story.belongsTo(User, {foreignKey: "userId"})
